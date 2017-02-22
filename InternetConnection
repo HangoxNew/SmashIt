@@ -48,8 +48,7 @@ public class SigninActivity extends AsyncTask<String, Void, String> {
                 return sb.toString();
             } catch(Exception e){
                 return "Exception: " + e.getMessage();
-            }
-        }
+         }
     }
 
     protected void onPostExecute(String result){
