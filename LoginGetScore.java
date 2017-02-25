@@ -1,124 +1,72 @@
 package com.example.smashit;
 
-import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-import android.view.View;
-import android.widget.EditText;
-import android.widget.LinearLayout;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.os.AsyncTask;
 
-public class MainActivity extends AppCompatActivity implements LoginGetScore.AsyncResponse {
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.URL;
+import java.net.URLConnection;
+import java.net.URLEncoder;
 
-    private EditText usernameField, passwordField;  // Eingabefelder Benutzername und Passwort
-    private TextView number;                        // Die Zahl, die angezeigt wird
-    private LinearLayout login;                     // Das Layout für den Login
-    private String username, password;              // speichert für späteren Set Benutzername und Passwort. Unsauber?
-    private int score = 0;                       // speichert den Score
-    private int old_score;                       // speichert einen Referenzwert
+/**
+ * Created by Jannik Adam on 24.02.2017.
+ */
 
+public class LoginGetScore extends AsyncTask<String, Void, String> {
 
-    // Hier passiert alles was beim Starten der App ausgeführt wird
+    public interface AsyncResponse {
+        void processFinish(String output);
+    }
+
+    public AsyncResponse delegate = null;
+
+    public LoginGetScore(AsyncResponse delegate) {
+        this.delegate = delegate;
+    }
+
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+    protected String doInBackground(String... arg0) {
+        try {
+            String username = (String) arg0[0];
+            String password = (String) arg0[1];
 
-        // Assoziere Variablen mit ihre entsprechenden Elemente
-        usernameField = (EditText) findViewById(R.id.username);
-        passwordField = (EditText) findViewById(R.id.password);
-        number   = (TextView) findViewById(R.id.number);
-        login    = (LinearLayout) findViewById(R.id.layout_login);
+            String link = "http://suplex.bplaced.net/LoginGetScore.php";
+            String data = URLEncoder.encode("username", "UTF-8") + "=" +
+                    URLEncoder.encode(username, "UTF-8");
+            data += "&" + URLEncoder.encode("password", "UTF-8") + "=" +
+                    URLEncoder.encode(password, "UTF-8");
 
-        // Bevor nicht eingeloggt wurde soll nichts anderes anklickbar sein
-        findViewById(R.id.counter).setClickable(false);
-        findViewById(R.id.submit).setClickable(false);
+            URL url = new URL(link);
+            URLConnection conn = url.openConnection();
 
+            conn.setDoOutput(true);
+            OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
+
+            wr.write(data);
+            wr.flush();
+
+            BufferedReader reader = new BufferedReader(new
+                    InputStreamReader(conn.getInputStream()));
+
+            StringBuilder sb = new StringBuilder();
+            String line = null;
+
+            // Warte auf Server Antwort
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
+                break;
+            }
+
+            return sb.toString();
+
+        } catch (Exception e) {
+            return "Exception: " + e.getMessage();
+        }
     }
 
-    /* Hier passiert alles nach dem Login, als Antwort
-     * @param response ; Antwort der Verbindung
-     */
     @Override
-    public void processFinish(String response){
-
-        // Ist die Antwort eine Zahl?
-        if (isInteger(response)) {
-
-            score = Integer.parseInt(response);     // speichert Antwort als unseren Score
-            old_score = score;                      // speichert Referenzwert
-            display(score);                         // zeigt den Score an
-            findViewById(R.id.counter).setClickable(true);  // jetzt darf man die anderen Knoepfe bedienen
-            findViewById(R.id.submit).setClickable(true);
-            login.setVisibility(View.GONE);         // Das Login-Layout wird geschlossen
-        }
-        else {
-
-            // keine Zahl? Dann auch Fehler
-            number.setText("Ungültige Anmeldedaten");
-            score = 0;
-        }
-    }
-
-    // Aufgerufen, wenn Login Knopf gedrückt wird
-    // Holt Score aus der Datenbank
-    public void login(View view) {
-        username = usernameField.getText().toString();  // holt Benutzername und speichert global
-        password = passwordField.getText().toString();  // holt Passwort und speichert global
-        new LoginGetScore(this).execute(username,password); // ruft den momentane Score online ab
-    }
-
-    // Zeigt den Score auf dem Bildschirm an
-    private void display(long text){
-        TextView numberText = (TextView) findViewById(R.id.number);
-        numberText.setText(String.valueOf(text));
-    }
-
-    // Aufgerufen, wenn irgendwo, ausser Submit und nach Login, gedrueckt wird
-    // Erhoeht den Score  um eins und zeigt diesen an
-    public void increment(View view) {
-        display(++score);
-    }
-
-    // Aufgerufen, wenn Submit Knopf gedrueckt wird
-    // Speichert den Score in der Datenbank
-    public void submit(View view) {
-
-        // speichert nur wenn man mind. 10 mal gedrueckt hat
-        if (score-old_score >= 10 ) {
-            new LoginSetScore(this).execute(username, password, "" + score);    // speichert den momentanen Score online ab
-        }
-        else {
-            Toast.makeText(this, "Tipp erstmal!", Toast.LENGTH_SHORT).show(); // Warnung, soll mind. 10 mal drücken
-        }
-        old_score = score; // Muss nach jeder Submit-Knopf betaetigung seinen Score um mind. 10 erhöhen
-    }
-
-    /* Überprüft ob ein String, eine Ganzzahl ist
-     * ERKENNT 0 NICHT ALS ZALH AN
-     * @param str ; der zu ueberpruefende String
-     */
-    private boolean isInteger(String str) {
-        if (str == null) {              // str ueberhaupt zugewiesen?
-            return false;
-        }
-        int length = str.length();
-        if (length == 0) {              // steht was im String?
-            return false;
-        }
-        int i = 0;
-        if (str.charAt(0) == '-') {     // steht ein minus an erster Stelle? Und wenn ja
-            if (length == 1) {          // stehen danach noch zahlen?
-                return false;
-            }
-            i = 1;
-        }
-        for (; i < length; i++) {       //ist jedes vorkommende Zeichen eine Zahl?
-            char c = str.charAt(i);
-            if (c < '0' || c > '9') {
-                return false;
-            }
-        }
-        return true;
+    protected void onPostExecute(String result){
+        delegate.processFinish(result);
     }
 }
