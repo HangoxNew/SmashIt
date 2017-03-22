@@ -95,7 +95,6 @@ public class MainActivity extends AppCompatActivity implements LoginGetScore.Asy
     }
 
     /* Überprüft ob ein String, eine Ganzzahl ist
-     * ERKENNT 0 NICHT ALS ZALH AN
      * @param str ; der zu ueberpruefende String
      */
     private boolean isInteger(String str) {
