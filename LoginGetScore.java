@@ -28,7 +28,10 @@ public class LoginGetScore extends AsyncTask<String, Void, String> {
         this.delegate = delegate;
     }
 
-    // Methode zum Anfragen der PHP-Schnittstelle
+    /*  Methode zum Anfragen der PHP-Schnittstelle
+     *  @param arg0[0] ; Benutzername
+     *  @param arg0[1] ; Passwort
+     */
     @Override
     protected String doInBackground(String... arg0) {
         try {
@@ -71,6 +74,8 @@ public class LoginGetScore extends AsyncTask<String, Void, String> {
         }
     }
 
+    // Methode kümmert sich um die Server-Antwort
+    // @param result ; Server-Antwort, bzw. Resultat von doInBackground
     @Override
     protected void onPostExecute(String result){
         delegate.processFinish(result); // Die Server-Antwort wird nun an das Activity-Objekt weitergeleiten
