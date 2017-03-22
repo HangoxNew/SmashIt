@@ -15,9 +15,11 @@ import java.net.URLEncoder;
  * Created by Jannik Adam on 24.02.2017.
  */
 
+
+// Klasse kann einen Zahlenwert über PHP-Schnittstelle mit Benutzername und Passwort abspeichern
 public class LoginSetScore extends AsyncTask<String, Void, String> {
 
-    Context context;    // Liefert den Kontext für das aktuelle Programm
+    Context context;    // Platzhalter für Kontext des aktuellen Programms
 
     public LoginSetScore(Context context){      // Konstruktor, uebergibt Kontext
         this.context = context;
@@ -30,7 +32,7 @@ public class LoginSetScore extends AsyncTask<String, Void, String> {
             String password = (String) arg0[1];
             String score    = (String) arg0[2];
 
-            String link = "http://suplex.bplaced.net/LoginSetScore.php";
+            String link = "http://suplex.bplaced.net/LoginSetScore.php"; // PHP-Schnittstelle
             String data = URLEncoder.encode("username", "UTF-8") + "=" +
                     URLEncoder.encode(username, "UTF-8");
             data += "&" + URLEncoder.encode("password", "UTF-8") + "=" +
